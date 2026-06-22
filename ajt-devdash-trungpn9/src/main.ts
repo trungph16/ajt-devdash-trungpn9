@@ -14,9 +14,16 @@ import {
   renderProductDetail,
 } from "./ui";
 
-import { debounce } from "./utils";
+import {
+  debounce,
+  Repository,
+} from "./utils";
 
 import type { Product } from "./types";
+
+import {
+  assertNever,
+} from "./state";
 import type { AppState } from "./state";
 
 const appElement: HTMLElement | null =
@@ -99,12 +106,14 @@ function attachModalEvents(
               card.dataset.id
             );
 
+          const repository =
+            new Repository<Product>(
+              products
+            );
+
           const product =
-            products.find(
-              (
-                item: Product
-              ): boolean =>
-                item.id === id
+            repository.findById(
+              id
             );
 
           if (
@@ -273,13 +282,44 @@ function renderDashboard(
   );
 }
 
+function renderState(
+  state: AppState,
+  categories: string[]
+): void {
+  switch (state.kind) {
+    case "loading":
+      app.innerHTML =
+        renderLoading();
+      break;
+
+    case "success":
+      renderDashboard(
+        state.data,
+        categories
+      );
+      break;
+
+    case "error":
+      app.innerHTML =
+        renderError(
+          state.message
+        );
+      break;
+
+    default:
+      assertNever(state);
+  }
+}
+
 async function initializeApp(): Promise<void> {
   let state: AppState = {
-    status: "loading",
+    kind: "loading",
   };
 
-  app.innerHTML =
-    renderLoading();
+  renderState(
+    state,
+    []
+  );
 
   try {
     const [
@@ -291,20 +331,15 @@ async function initializeApp(): Promise<void> {
     ]);
 
     state = {
-      status: "success",
+      kind: "success",
       data:
         productResponse.products,
     };
 
-    if (
-      state.status ===
-      "success"
-    ) {
-      renderDashboard(
-        state.data,
-        categories
-      );
-    }
+    renderState(
+      state,
+      categories
+    );
   } catch (
     error: unknown
   ) {
@@ -314,14 +349,14 @@ async function initializeApp(): Promise<void> {
         : "Unknown error";
 
     state = {
-      status: "error",
+      kind: "error",
       message,
     };
 
-    app.innerHTML =
-      renderError(
-        state.message
-      );
+    renderState(
+      state,
+      []
+    );
   }
 }
 

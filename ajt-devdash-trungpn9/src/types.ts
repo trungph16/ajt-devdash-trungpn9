@@ -18,3 +18,25 @@ export interface ProductResponse {
   skip: number;
   limit: number;
 }
+
+export type ProductCard =
+  Pick<
+    Product,
+    | "id"
+    | "title"
+    | "price"
+    | "thumbnail"
+    | "category"
+    | "stock"
+  >;
+
+export type ProductFilter =
+  Partial<{
+    keyword: string;
+    category: string;
+    minPrice: number;
+    maxPrice: number;
+  }>;
+
+export type ReadonlyProduct =
+  Readonly<Product>;
