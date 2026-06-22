@@ -1,10 +1,37 @@
-const app = document.querySelector<HTMLDivElement>("#app");
+import { getProducts } from "./api";
 
-if (!app) {
-  throw new Error("App element not found");
+import {
+  renderLoading,
+  renderProducts,
+  renderError,
+} from "./ui";
+
+const appElement: HTMLElement | null =
+  document.querySelector("#app");
+
+if (appElement === null) {
+  throw new Error("App container not found");
 }
 
-app.innerHTML = `
-  <h1>AJT DevDash</h1>
-  <p>Day 1 setup completed.</p>
-`;
+const app: HTMLElement = appElement;
+
+async function initializeApp(): Promise<void> {
+  try {
+    app.innerHTML = renderLoading();
+
+    const result = await getProducts();
+
+    app.innerHTML = renderProducts(
+      result.products
+    );
+  } catch (error: unknown) {
+    const message: string =
+      error instanceof Error
+        ? error.message
+        : "Unknown error";
+
+    app.innerHTML = renderError(message);
+  }
+}
+
+void initializeApp();
