@@ -6,7 +6,8 @@ export async function fetchJson<T>(
   url: string
 ): Promise<T> {
   try {
-    const response: Response = await fetch(url);
+    const response: Response =
+      await fetch(url);
 
     if (!response.ok) {
       throw new Error(
@@ -14,20 +15,31 @@ export async function fetchJson<T>(
       );
     }
 
-    const data: T = await response.json();
+    const data: T =
+      await response.json();
 
     return data;
   } catch (error: unknown) {
     if (error instanceof Error) {
-      throw new Error(error.message);
+      throw new Error(
+        error.message
+      );
     }
 
-    throw new Error("Unknown error");
+    throw new Error(
+      "Unknown error"
+    );
   }
 }
 
 export async function getProducts(): Promise<ProductResponse> {
   return fetchJson<ProductResponse>(
-    `${BASE_URL}/products`
+    `${BASE_URL}/products?limit=194`
+  );
+}
+
+export async function getCategories(): Promise<string[]> {
+  return fetchJson<string[]>(
+    `${BASE_URL}/products/category-list`
   );
 }

@@ -22,7 +22,35 @@ export function renderSearchControls(): string {
           Price ↓
         </option>
       </select>
+
+      <select
+        id="category-select"
+        class="rounded border p-3"
+      >
+      </select>
     </div>
+  `;
+}
+
+export function renderCategoryOptions(
+  categories: string[]
+): string {
+  return `
+    <option value="">
+      All Categories
+    </option>
+
+    ${categories
+      .map(
+        (
+          category: string
+        ) => `
+          <option value="${category}">
+            ${category}
+          </option>
+        `
+      )
+      .join("")}
   `;
 }
 
@@ -33,8 +61,13 @@ export function renderProducts(
     <div class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
       ${products
         .map(
-          (product: Product) => `
-            <div class="rounded-lg border p-4 shadow-sm">
+          (
+            product: Product
+          ) => `
+            <div
+              class="product-card cursor-pointer rounded-lg border p-4 shadow-sm"
+              data-id="${product.id}"
+            >
               <img
                 src="${product.thumbnail}"
                 alt="${product.title}"
@@ -54,12 +87,74 @@ export function renderProducts(
               </p>
 
               <p>
-                Stock: ${product.stock}
+                Stock:
+                ${product.stock}
               </p>
             </div>
           `
         )
         .join("")}
+    </div>
+  `;
+}
+
+export function renderProductDetail(
+  product: Product
+): string {
+  return `
+    <div
+      id="product-modal"
+      class="fixed inset-0 flex items-center justify-center bg-black/50"
+    >
+      <div
+        class="w-full max-w-lg rounded bg-white p-6"
+      >
+        <button
+          id="close-modal"
+          class="mb-4 rounded border px-3 py-1"
+        >
+          Close
+        </button>
+
+        <img
+          src="${product.thumbnail}"
+          alt="${product.title}"
+          class="mb-4 h-60 w-full rounded object-cover"
+        />
+
+        <h2 class="text-2xl font-bold">
+          ${product.title}
+        </h2>
+
+        <p class="mt-3">
+          ${product.description}
+        </p>
+
+        <p class="mt-2">
+          Category:
+          ${product.category}
+        </p>
+
+        <p>
+          Brand:
+          ${product.brand}
+        </p>
+
+        <p>
+          Price:
+          $${product.price}
+        </p>
+
+        <p>
+          Rating:
+          ${product.rating}
+        </p>
+
+        <p>
+          Stock:
+          ${product.stock}
+        </p>
+      </div>
     </div>
   `;
 }

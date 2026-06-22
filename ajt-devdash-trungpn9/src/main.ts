@@ -1,12 +1,17 @@
 import "../style.css";
 
-import { getProducts } from "./api";
+import {
+  getProducts,
+  getCategories,
+} from "./api";
 
 import {
   renderProducts,
   renderLoading,
   renderError,
   renderSearchControls,
+  renderCategoryOptions,
+  renderProductDetail,
 } from "./ui";
 
 import { debounce } from "./utils";
@@ -18,23 +23,44 @@ const appElement: HTMLElement | null =
   document.querySelector("#app");
 
 if (appElement === null) {
-  throw new Error("App container not found");
+  throw new Error(
+    "App container not found"
+  );
 }
 
-const app: HTMLElement = appElement;
+const app: HTMLElement =
+  appElement;
 
 function filterProducts(
   keyword: string,
   products: Product[]
 ): Product[] {
-  const normalizedKeyword: string =
-    keyword.toLowerCase();
-
   return products.filter(
-    (product: Product): boolean =>
+    (
+      product: Product
+    ): boolean =>
       product.title
         .toLowerCase()
-        .includes(normalizedKeyword)
+        .includes(
+          keyword.toLowerCase()
+        )
+  );
+}
+
+function filterByCategory(
+  category: string,
+  products: Product[]
+): Product[] {
+  if (category === "") {
+    return products;
+  }
+
+  return products.filter(
+    (
+      product: Product
+    ): boolean =>
+      product.category ===
+      category
   );
 }
 
@@ -53,11 +79,78 @@ function sortProducts(
   );
 }
 
-function renderDashboard(
+function attachModalEvents(
   products: Product[]
 ): void {
-  const initialProducts: Product[] =
-    sortProducts(products, "asc");
+  const cards =
+    document.querySelectorAll<HTMLElement>(
+      ".product-card"
+    );
+
+  cards.forEach(
+    (
+      card: HTMLElement
+    ): void => {
+      card.addEventListener(
+        "click",
+        (): void => {
+          const id: number =
+            Number(
+              card.dataset.id
+            );
+
+          const product =
+            products.find(
+              (
+                item: Product
+              ): boolean =>
+                item.id === id
+            );
+
+          if (
+            product ===
+            undefined
+          ) {
+            return;
+          }
+
+          document.body.insertAdjacentHTML(
+            "beforeend",
+            renderProductDetail(
+              product
+            )
+          );
+
+          const closeButton =
+            document.querySelector<HTMLElement>(
+              "#close-modal"
+            );
+
+          closeButton?.addEventListener(
+            "click",
+            (): void => {
+              document
+                .querySelector(
+                  "#product-modal"
+                )
+                ?.remove();
+            }
+          );
+        }
+      );
+    }
+  );
+}
+
+function renderDashboard(
+  products: Product[],
+  categories: string[]
+): void {
+  const initialProducts =
+    sortProducts(
+      products,
+      "asc"
+    );
 
   app.innerHTML = `
     <div class="mx-auto max-w-7xl p-6">
@@ -68,7 +161,9 @@ function renderDashboard(
       ${renderSearchControls()}
 
       <div id="product-list">
-        ${renderProducts(initialProducts)}
+        ${renderProducts(
+          initialProducts
+        )}
       </div>
     </div>
   `;
@@ -83,6 +178,11 @@ function renderDashboard(
       "#sort-select"
     );
 
+  const categorySelect =
+    document.querySelector<HTMLSelectElement>(
+      "#category-select"
+    );
+
   const productList =
     document.querySelector<HTMLElement>(
       "#product-list"
@@ -91,30 +191,49 @@ function renderDashboard(
   if (
     searchInput === null ||
     sortSelect === null ||
+    categorySelect ===
+      null ||
     productList === null
   ) {
     return;
   }
+
+  categorySelect.innerHTML =
+    renderCategoryOptions(
+      categories
+    );
 
   const updateProducts =
     (): void => {
       const keyword: string =
         searchInput.value;
 
-      const order: "asc" | "desc" =
-        sortSelect.value === "desc"
+      const category: string =
+        categorySelect.value;
+
+      const order:
+        | "asc"
+        | "desc" =
+        sortSelect.value ===
+        "desc"
           ? "desc"
           : "asc";
 
-      const filteredProducts: Product[] =
+      const filteredBySearch =
         filterProducts(
           keyword,
           products
         );
 
-      const sortedProducts: Product[] =
+      const filteredByCategory =
+        filterByCategory(
+          category,
+          filteredBySearch
+        );
+
+      const sortedProducts =
         sortProducts(
-          filteredProducts,
+          filteredByCategory,
           order
         );
 
@@ -122,9 +241,13 @@ function renderDashboard(
         renderProducts(
           sortedProducts
         );
+
+      attachModalEvents(
+        sortedProducts
+      );
     };
 
-  const handleSearch: () => void =
+  const handleSearch =
     debounce(
       updateProducts,
       300
@@ -139,6 +262,15 @@ function renderDashboard(
     "change",
     updateProducts
   );
+
+  categorySelect.addEventListener(
+    "change",
+    updateProducts
+  );
+
+  attachModalEvents(
+    initialProducts
+  );
 }
 
 async function initializeApp(): Promise<void> {
@@ -146,22 +278,36 @@ async function initializeApp(): Promise<void> {
     status: "loading",
   };
 
-  app.innerHTML = renderLoading();
+  app.innerHTML =
+    renderLoading();
 
   try {
-    const result = await getProducts();
+    const [
+      productResponse,
+      categories,
+    ] = await Promise.all([
+      getProducts(),
+      getCategories(),
+    ]);
 
     state = {
       status: "success",
-      data: result.products,
+      data:
+        productResponse.products,
     };
 
-    if (state.status === "success") {
+    if (
+      state.status ===
+      "success"
+    ) {
       renderDashboard(
-        state.data
+        state.data,
+        categories
       );
     }
-  } catch (error: unknown) {
+  } catch (
+    error: unknown
+  ) {
     const message: string =
       error instanceof Error
         ? error.message
