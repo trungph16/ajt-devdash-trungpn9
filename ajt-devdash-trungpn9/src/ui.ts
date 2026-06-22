@@ -1,68 +1,87 @@
 import type { Product } from "./types";
-import type { AppState } from "./state";
 
-export function renderState(
-  state: AppState
+export function renderSearchControls(): string {
+  return `
+    <div class="mb-6 flex gap-4">
+      <input
+        id="search-input"
+        type="text"
+        placeholder="Search products..."
+        class="flex-1 rounded border p-3"
+      />
+
+      <select
+        id="sort-select"
+        class="rounded border p-3"
+      >
+        <option value="asc">
+          Price ↑
+        </option>
+
+        <option value="desc">
+          Price ↓
+        </option>
+      </select>
+    </div>
+  `;
+}
+
+export function renderProducts(
+  products: Product[]
 ): string {
-  switch (state.status) {
-    case "loading":
-      return `
-        <div class="flex justify-center py-10">
-          <p class="text-lg">Loading products...</p>
-        </div>
-      `;
+  return `
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+      ${products
+        .map(
+          (product: Product) => `
+            <div class="rounded-lg border p-4 shadow-sm">
+              <img
+                src="${product.thumbnail}"
+                alt="${product.title}"
+                class="h-40 w-full rounded object-cover"
+              />
 
-    case "error":
-      return `
-        <div class="max-w-md mx-auto mt-10 rounded border border-red-300 bg-red-50 p-4">
-          <p class="font-semibold text-red-600">
-            Failed to load products
-          </p>
-          <p class="text-red-500">
-            ${state.message}
-          </p>
-        </div>
-      `;
+              <h3 class="mt-3 font-semibold">
+                ${product.title}
+              </h3>
 
-    case "success":
-      return `
-        <div class="max-w-7xl mx-auto p-6">
-          <h1 class="mb-6 text-3xl font-bold">
-            Product Dashboard
-          </h1>
+              <p class="text-gray-500">
+                ${product.category}
+              </p>
 
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            ${state.data
-              .map(
-                (product: Product) => `
-                  <div class="rounded-lg border p-4 shadow-sm">
-                    <img
-                      src="${product.thumbnail}"
-                      alt="${product.title}"
-                      class="h-40 w-full object-cover rounded"
-                    />
+              <p class="font-bold">
+                $${product.price}
+              </p>
 
-                    <h3 class="mt-3 font-semibold">
-                      ${product.title}
-                    </h3>
+              <p>
+                Stock: ${product.stock}
+              </p>
+            </div>
+          `
+        )
+        .join("")}
+    </div>
+  `;
+}
 
-                    <p class="mt-2 text-gray-600">
-                      ${product.category}
-                    </p>
+export function renderLoading(): string {
+  return `
+    <div class="p-8 text-center">
+      Loading products...
+    </div>
+  `;
+}
 
-                    <p class="mt-2 font-bold">
-                      $${product.price}
-                    </p>
+export function renderError(
+  message: string
+): string {
+  return `
+    <div class="rounded border border-red-300 bg-red-50 p-4">
+      <p class="font-bold text-red-600">
+        Error
+      </p>
 
-                    <p class="text-sm text-gray-500">
-                      Stock: ${product.stock}
-                    </p>
-                  </div>
-                `
-              )
-              .join("")}
-          </div>
-        </div>
-      `;
-  }
+      <p>${message}</p>
+    </div>
+  `;
 }
