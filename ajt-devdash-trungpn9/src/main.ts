@@ -1,10 +1,9 @@
-import { getProducts } from "./api";
+import "../style.css";
 
-import {
-  renderLoading,
-  renderProducts,
-  renderError,
-} from "./ui";
+import { getProducts } from "./api";
+import { renderState } from "./ui";
+
+import type { AppState } from "./state";
 
 const appElement: HTMLElement | null =
   document.querySelector("#app");
@@ -16,21 +15,33 @@ if (appElement === null) {
 const app: HTMLElement = appElement;
 
 async function initializeApp(): Promise<void> {
-  try {
-    app.innerHTML = renderLoading();
+  let state: AppState = {
+    status: "loading",
+  };
 
+  app.innerHTML = renderState(state);
+
+  try {
     const result = await getProducts();
 
-    app.innerHTML = renderProducts(
-      result.products
-    );
+    state = {
+      status: "success",
+      data: result.products,
+    };
+
+    app.innerHTML = renderState(state);
   } catch (error: unknown) {
     const message: string =
       error instanceof Error
         ? error.message
         : "Unknown error";
 
-    app.innerHTML = renderError(message);
+    state = {
+      status: "error",
+      message,
+    };
+
+    app.innerHTML = renderState(state);
   }
 }
 
